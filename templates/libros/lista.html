@@ -1,0 +1,695 @@
+{% extends 'base.html' %}
+{% block title %}Lista de Libros{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Lista de Libros</h2>
+  
+  <div class="d-flex justify-content-space-evenly gap-2 mb-4">
+    <a href="{{ url_for('libros.crear_libro') }}" class="btn btn-success">Agregar Libro</a>
+  
+    <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#modalBusquedaLibros">
+      Buscar Libros
+    </button>
+  
+    <a href="{{ url_for('libros.generar_reporte_pdf') }}" class="btn btn-danger">Generar Reporte PDF</a>
+  </div>
+  
+
+  <table class="table table-bordered table-hover">
+      <thead class="table-dark">
+          <tr>
+              <th>Portada</th>
+              <th>Título</th>
+              <th>Autor</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>Acciones</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for libro in libros %}
+          <tr>
+            
+            <td>
+      
+            
+              
+            {% if libro.imagen_url %}
+            <img src="{{ url_for('static', filename=libro.imagen_url) }}" width="150">
+            {% else %}
+              <span class="text-muted">Sin imagen</span>
+            {% endif %}
+            
+                
+              <td>{{ libro.titulo }}</td>
+              <td>{{ libro.autor_libros.nombre }}</td>
+              <td>{{ libro.categoria_libros.categoria }}</td> 
+              <td>{{ libro.stock }}</td>
+              <td>
+                  <a href="{{ url_for('libros.editar_libro', id=libro.id_libro) }}" class="btn btn-warning btn-sm">Editar</a>
+                  <form action="{{ url_for('libros.eliminar_libro', id=libro.id_libro) }}" method="POST" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                  </form>
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="6" class="text-center">No hay libros registrados.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+
+<hr>
+ 
+<!-- Búsqueda de usuario -->
+<div class="mb-3 d-flex align-items-center gap-2">
+  <input type="text" id="inputBusquedaUsuario" class="form-control" placeholder="Buscar usuario por nombre o correo">
+  <button id="btnBuscarUsuario" class="btn btn-primary">Buscar</button>
+</div>
+
+<!-- Modal para editar usuario y préstamos -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form id="formEditarUsuario">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="usuarioId" name="usuario_id">
+
+          <div class="mb-3">
+            <label for="nombreUsuario" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="correoUsuario" class="form-label">Correo</label>
+            <input type="email" class="form-control" id="correoUsuario" name="correo" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="contraseñaUsuario" class="form-label">Contraseña (dejar vacío para no cambiar)</label>
+            <input type="password" class="form-control" id="contraseñaUsuario" name="contraseña">
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="esAdmin" name="es_admin">
+            <label class="form-check-label" for="esAdmin">Es Administrador</label>
+          </div>
+
+          <h6>Préstamos activos</h6>
+          <div id="prestamosActivosContainer">
+            <!-- Aquí se cargarán dinámicamente los préstamos con campos editables -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar Cambios</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Usuarios Registrados</h2>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalUsuario">Agregar Usuario</button>
+  </div>
+  
+  <table class="table table-bordered">
+      <thead class="table-light">
+          <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Contraseña</th> 
+              <th>Admin</th>
+              <th>Acciones</th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for usuario in usuarios %}
+          <tr>
+              <td>{{ usuario.nombre }}</td>
+              <td>{{ usuario.correo }}</td>
+              <td style="max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ usuario.contraseña }}</td>
+              <td>{{ 'Sí' if usuario.es_admin else 'No' }}</td>
+              <td>
+                  <!-- <button 
+                      class="btn btn-warning btn-sm"
+                      data-bs-toggle="modal"
+                      data-bs-target="#editarModal"
+                      data-id="{{ usuario.id_usuario }}"
+                      data-nombre="{{ usuario.nombre }}"
+                      data-correo="{{ usuario.correo }}"
+                      data-contraseña="{{ usuario.contraseña }}"
+                      data-admin="{{ 'true' if usuario.es_admin else 'false' }}"
+                  >Editar</button> -->
+
+                  <button 
+                  class="btn btn btn-dark btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#librosPrestadosModal"
+                  data-usuario-id="{{ usuario.id_usuario }}"
+              >Ver Libros Prestados</button>
+
+                  <form action="{{ url_for('usuarios.eliminar_usuario', id=usuario.id_usuario) }}" method="POST" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                  </form>
+              </td>
+          </tr>
+          {% else %}
+          <tr>
+              <td colspan="5" class="text-center">No hay usuarios registrados.</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+  </table>
+</div>
+
+<!-- Modal para agregar usuario -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="{{ url_for('usuarios.crear_usuario') }}" method="POST" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalUsuarioLabel">Agregar Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="nombre" class="form-label">Nombre</label>
+          <input type="text" class="form-control" name="nombre" required>
+        </div>
+        <div class="mb-3">
+          <label for="correo" class="form-label">Correo</label>
+          <input type="email" class="form-control" name="correo" required>
+        </div>
+        <div class="mb-3">
+          <label for="contraseña" class="form-label">Contraseña</label>
+          <input type="password" class="form-control" name="contraseña" required>
+        </div>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" name="es_admin" value="true" id="es_admin">
+          <label class="form-check-label" for="es_admin">¿Es administrador?</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Guardar Usuario</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para editar usuario -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+      <form action="{{ url_for('usuarios.editar_usuario', id=0) }}" method="POST" class="modal-content" id="editarForm">
+          <div class="modal-header">
+              <h5 class="modal-title" id="editarModalLabel">Editar Usuario</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+              <div class="mb-3">
+                  <label for="nombre" class="form-label">Nombre</label>
+                  <input type="text" class="form-control" name="nombre" id="nombre" required>
+              </div>
+              <div class="mb-3">
+                  <label for="correo" class="form-label">Correo</label>
+                  <input type="email" class="form-control" name="correo" id="correo" required>
+              </div>
+              <div class="mb-3">
+                  <label for="contraseña" class="form-label">Contraseña</label>
+                  <input type="password" class="form-control" name="contraseña" id="contraseña" required>
+              </div>
+              
+              <div class="form-check">
+                  <input type="checkbox" class="form-check-input" name="es_admin" id="es_admin" value="true">
+                  <label class="form-check-label" for="es_admin">¿Es administrador?</label>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="submit" class="btn btn-success">Guardar Cambios</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+      </form>
+  </div>
+</div>
+
+<!-- Modal para mostrar libros prestados -->
+<div class="modal fade" id="librosPrestadosModal" tabindex="-1" aria-labelledby="librosPrestadosModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="librosPrestadosModalLabel">
+              Libros Prestados de <span id="nombreUsuarioPrestamos" class="text-primary fw-bold"></span>
+          </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+              <div class="d-flex justify-content-end mb-2">
+                  <a id="btnAgregarPrestamo" class="btn btn-success" href="#">Agregar Préstamo</a>
+              </div>
+              <div id="librosPrestadosList">
+                  <table class="table table-bordered">
+                      <thead class="table-light">
+                          <tr>
+                              <th>Título</th>
+                              <th>Autor</th>
+                              <th>Fecha de salida</th>
+                              <th>Fecha de devolución</th>
+                              <th>Devuelto</th>
+                              <th>Acciones</th>
+                          </tr>
+                      </thead>
+                      <tbody id="librosPrestadosBody">
+                          <!-- Filas dinámicas con JavaScript -->
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- AGREGAR PRESTAMO -->
+ <!-- Modal para agregar préstamo -->
+<div class="modal fade" id="modalAgregarPrestamo" tabindex="-1" aria-labelledby="modalAgregarPrestamoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="/prestamos/crear" method="POST" class="modal-content">
+      <input type="hidden" name="usuario_id" id="usuarioIdInput">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAgregarPrestamoLabel">Agregar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="libro_id" class="form-label">Libro</label>
+          <select class="form-select" name="libro_id" required>
+            {% for libro in libros %}
+            {% if libro.stock > 0 %}
+            <option value="{{ libro.id_libro }}">{{ libro.titulo }} ({{ libro.autor_libros.nombre }})</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="fecha_salida" class="form-label">Fecha de salida</label>
+          <input type="date" class="form-control" name="fecha_salida" required>
+        </div>
+        <div class="mb-3">
+          <label for="fecha_devolucion" class="form-label">Fecha de devolución</label>
+          <input type="date" class="form-control" name="fecha_devolucion" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-success">Guardar Préstamo</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+<!-- Modal para préstamo expirado -->
+<div class="modal fade" id="prestamoExpiradoModal" tabindex="-1" aria-labelledby="prestamoExpiradoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="prestamoExpiradoModalLabel">¡Préstamo Expirado!</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>El préstamo del libro <strong id="libroExpiradoTitulo"></strong> ha expirado. La fecha de devolución era el <strong id="fechaDevolucionExpirada"></strong>.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- busqueda -->
+<div class="modal fade" id="modalBusquedaLibros" tabindex="-1" aria-labelledby="modalBusquedaLibrosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalBusquedaLibrosLabel">Buscar libros</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Formulario de búsqueda -->
+          <form id="formBusqueda" class="row g-3 mb-4">
+            <div class="col-md-4">
+              <input type="text" name="titulo" class="form-control" placeholder="Buscar por título">
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="autor" class="form-control" placeholder="Buscar por autor">
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="categoria" class="form-control" placeholder="Buscar por categoría">
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">Buscar</button>
+            </div>
+          </form>
+  
+          <!-- Resultados aquí -->
+          <div id="resultadosBusqueda" class="row">
+            <!-- Aquí se renderizarán las cards con HTMX -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+
+
+<script>
+    // Desaparecer los mensajes después de 5 segundos (5000 ms)
+    setTimeout(function() {
+        var flashMessages = document.querySelectorAll('#flash-message');
+        flashMessages.forEach(function(message) {
+            message.classList.remove('show');  // Remueve la clase 'show' para ocultarlo
+        });
+    }, 5000);  // 5000 ms = 5 segundos
+</script>
+<!-- Script para cargar los libros prestados de un usuario -->
+<script>
+  let usuarioIdSeleccionado = null;
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    const librosPrestadosModal = document.getElementById('librosPrestadosModal');
+    
+    librosPrestadosModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        usuarioIdSeleccionado = button.getAttribute('data-usuario-id');
+  
+        // Set link para agregar préstamo
+        const btnAgregar = document.getElementById('btnAgregarPrestamo');
+        btnAgregar.setAttribute('data-bs-toggle', 'modal');
+        btnAgregar.setAttribute('data-bs-target', '#modalAgregarPrestamo');
+        document.getElementById('usuarioIdInput').value = usuarioIdSeleccionado;
+          
+        fetch(`/prestamos/libros_prestados/${usuarioIdSeleccionado}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('librosPrestadosBody');
+                tbody.innerHTML = '';
+                document.getElementById('nombreUsuarioPrestamos').textContent = data.nombre_usuario;
+
+                if (data.libros.length > 0) {
+                    data.libros.forEach(libro => {
+                        const row = document.createElement('tr');
+                        row.id = `prestamo-${libro.id_prestamo}`; // Asignar ID único a la fila
+                        row.innerHTML = `
+                            <td>${libro.titulo}</td>
+                            <td>${libro.autor}</td>
+                            <td>${libro.fecha_salida}</td>
+                            <td>${libro.fecha_devolucion}</td>
+                            <td>${libro.devuelto ? 'Sí' : 'No'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="quitarPrestamo(${libro.id_prestamo})">Eliminar préstamo</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="6" class="text-center">Este usuario no ha prestado libros.</td>`;
+                    tbody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+  });
+  
+  // Función para quitar préstamo
+  function quitarPrestamo(id_prestamo) {
+    fetch(`/prestamos/devolver/${id_prestamo}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Eliminar la fila del préstamo en el modal sin recargar la página
+            const row = document.getElementById(`prestamo-${id_prestamo}`);
+            if (row) {
+                row.remove();
+            }
+        } else {
+            alert('Error al devolver el libro');
+        }
+    })
+    .catch(error => {
+        console.error('Error al devolver préstamo:', error);
+    });
+  }
+</script>
+<script>
+  let usuarioIdSeleccionado = null;
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    const librosPrestadosModal = document.getElementById('librosPrestadosModal');
+    
+    librosPrestadosModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        usuarioIdSeleccionado = button.getAttribute('data-usuario-id');
+  
+        // Set link para agregar préstamo
+        const btnAgregar = document.getElementById('btnAgregarPrestamo');
+        btnAgregar.setAttribute('data-bs-toggle', 'modal');
+        btnAgregar.setAttribute('data-bs-target', '#modalAgregarPrestamo');
+        document.getElementById('usuarioIdInput').value = usuarioIdSeleccionado;
+          
+        fetch(`/prestamos/libros_prestados/${usuarioIdSeleccionado}`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('librosPrestadosBody');
+                tbody.innerHTML = '';
+                document.getElementById('nombreUsuarioPrestamos').textContent = data.nombre_usuario;
+
+                // Habilitar o deshabilitar el botón de eliminar usuario
+                const btnEliminarUsuario = document.getElementById('btnEliminarUsuario');
+                if (data.libros.length > 0) {
+                    btnEliminarUsuario.disabled = true;  // Deshabilitar eliminación si hay préstamos activos
+                } else {
+                    btnEliminarUsuario.disabled = false;  // Habilitar eliminación si no hay préstamos activos
+                }
+
+                if (data.libros.length > 0) {
+                    data.libros.forEach(libro => {
+                        const row = document.createElement('tr');
+                        row.id = `prestamo-${libro.id_prestamo}`; // Asignar ID único a la fila
+                        row.innerHTML = `
+                            <td>${libro.titulo}</td>
+                            <td>${libro.autor}</td>
+                            <td>${libro.fecha_salida}</td>
+                            <td>${libro.fecha_devolucion}</td>
+                            <td>${libro.devuelto ? 'Sí' : 'No'}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="quitarPrestamo(${libro.id_prestamo})">Quitar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td colspan="6" class="text-center">Este usuario no ha prestado libros.</td>`;
+                    tbody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+  });
+  
+  // Función para quitar préstamo
+  function quitarPrestamo(id_prestamo) {
+    fetch(`/prestamos/devolver/${id_prestamo}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Eliminar la fila del préstamo en el modal sin recargar la página
+            const row = document.getElementById(`prestamo-${id_prestamo}`);
+            if (row) {
+                row.remove();
+            }
+        } else {
+            alert('Error al devolver el libro');
+        }
+    })
+    .catch(error => {
+        console.error('Error al devolver préstamo:', error);
+    });
+  }
+
+  // Función para eliminar el usuario
+  function eliminarUsuario() {
+    if (usuarioIdSeleccionado) {
+        fetch(`/usuarios/eliminar_usuario/${usuarioIdSeleccionado}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Usuario eliminado correctamente');
+                // Cerrar el modal después de eliminar
+                const modal = new bootstrap.Modal(document.getElementById('librosPrestadosModal'));
+                modal.hide();
+                // Opcional: Actualizar la lista de usuarios o realizar otra acción si es necesario
+            } else {
+                alert('Error al eliminar el usuario');
+            }
+        })
+        .catch(error => {
+            console.error('Error al eliminar el usuario:', error);
+        });
+    }
+  }
+</script>
+
+
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+<script>
+  document.getElementById('formBusqueda').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const params = new URLSearchParams(new FormData(form)).toString();
+
+    fetch(`/libros/busqueda?${params}`)
+    .then(res => res.text())
+      .then(html => {
+        document.getElementById('resultadosBusqueda').innerHTML = html;
+      });
+  });
+</script>
+<script>
+    // Desaparecer los mensajes después de 5 segundos (5000 ms)
+    setTimeout(function() {
+        var flashMessages = document.querySelectorAll('#flash-message');
+        flashMessages.forEach(function(message) {
+            message.classList.remove('show');  // Remueve la clase 'show' para ocultarlo
+        });
+    }, 5000);  // 5000 ms = 5 segundos
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById('btnBuscarUsuario').addEventListener('click', function() {
+    const q = document.getElementById('inputBusquedaUsuario').value.trim();
+    if (!q) return alert('Escribe algo para buscar.');
+  
+    fetch(`/usuarios/buscar?q=${encodeURIComponent(q)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) {
+          alert('No se encontraron usuarios.');
+          return;
+        }
+        // Por simplicidad tomamos el primer usuario encontrado
+        cargarUsuarioEnModal(data[0]);
+        const modal = new bootstrap.Modal(document.getElementById('modalEditarUsuario'));
+        modal.show();
+      });
+  });
+  
+  function cargarUsuarioEnModal(usuario) {
+    document.getElementById('usuarioId').value = usuario.id_usuario;
+    document.getElementById('nombreUsuario').value = usuario.nombre;
+    document.getElementById('correoUsuario').value = usuario.correo;
+    document.getElementById('contraseñaUsuario').value = '';
+    document.getElementById('esAdmin').checked = usuario.es_admin;
+  
+    const container = document.getElementById('prestamosActivosContainer');
+    container.innerHTML = '';
+  
+    if (usuario.prestamos.length === 0) {
+      container.innerHTML = '<p>No hay préstamos activos.</p>';
+      return;
+    }
+  
+    usuario.prestamos.forEach(prestamo => {
+      const vencido = prestamo.vencido ? 'Sí' : 'No';
+  
+      const prestamoHTML = `
+        <div class="border p-2 mb-2">
+          <input type="hidden" name="prestamo_id[]" value="${prestamo.id}">
+          <div><strong>Título:</strong> ${prestamo.titulo}</div>
+          <div>
+            <label>Fecha Salida:</label>
+            <input type="date" name="fecha_salida_${prestamo.id}" value="${prestamo.fecha_salida}" class="form-control form-control-sm" required>
+          </div>
+          <div>
+            <label>Fecha Devolución:</label>
+            <input type="date" name="fecha_devolucion_${prestamo.id}" value="${prestamo.fecha_devolucion}" class="form-control form-control-sm" required>
+          </div>
+          <div>
+            <label>Vencido:</label>
+            <input type="text" class="form-control form-control-sm" value="${vencido}" readonly>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="devuelto_${prestamo.id}" id="devuelto_${prestamo.id}" ${vencido === 'Sí' ? '' : ''}>
+            <label class="form-check-label" for="devuelto_${prestamo.id}">Devuelto</label>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', prestamoHTML);
+    });
+  }
+  
+  document.getElementById('formEditarUsuario').addEventListener('submit', function(e) {
+    e.preventDefault();
+  
+    const form = e.target;
+    const usuarioId = document.getElementById('usuarioId').value;
+  
+    // Crear FormData para enviar todo
+    const formData = new FormData(form);
+  
+    // Enviar la edición por fetch POST a la ruta editar
+    fetch(`/usuarios/editar_usuario/${usuarioId}`, {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => {
+      if (res.redirected) {
+        window.location.href = res.url;
+      } else {
+        return res.text();
+      }
+    })
+    .then(data => {
+      // Aquí podrías mostrar mensaje o cerrar modal y refrescar la lista
+      const modalEl = document.getElementById('modalEditarUsuario');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+      location.reload(); // Recarga para reflejar cambios
+    })
+    .catch(err => {
+      alert('Error al guardar cambios.');
+      console.error(err);
+    });
+  });
+  </script>
+  
+
+{% endblock %}

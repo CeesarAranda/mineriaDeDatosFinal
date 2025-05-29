@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a la Biblioteca</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background:linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .hero {
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      color: #333;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: bold;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+    }
+
+    .btn-primary {
+      font-size: 1.1rem;
+      padding: 12px 24px;
+    }
+
+    footer {
+      background-color: #343a40;
+      color: white;
+      padding: 15px 0;
+      margin-top: 40px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="alert-container">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-3">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('libros.lista_libros') }}">Biblioteca</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarContenido">
+        <ul class="navbar-nav ms-auto">
+          {% if current_user.is_authenticated %}
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <span class="nav-link disabled text-primary">Hola, {{ current_user.nombre }}</span>
+            </li>
+          </ul>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#modalPrestamosActivos">Ver préstamos</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+          </li>
+
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="hero" style="color: whitesmoke">
+    <h1>Bienvenido a la Biblioteca Digital</h1>
+    <p>Explora, presta y descubre miles de libros desde cualquier lugar.</p>
+
+    <button type="button" class="btn btn-info btn-lg" data-bs-toggle="modal" data-bs-target="#modalBusquedaLibros">
+      Buscar Libros
+    </button>
+  </div>
+
+<div class="modal fade" id="modalBusquedaLibros" tabindex="-1" aria-labelledby="modalBusquedaLibrosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalBusquedaLibrosLabel">Buscar libros</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formBusqueda" class="row g-3 mb-4">
+            <div class="col-md-4">
+              <input type="text" name="titulo" class="form-control" placeholder="Buscar por título">
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="autor" class="form-control" placeholder="Buscar por autor">
+            </div>
+            <div class="col-md-4">
+              <input type="text" name="categoria" class="form-control" placeholder="Buscar por categoría">
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary">Buscar</button>
+            </div>
+          </form>
+
+          <div id="resultadosBusqueda" class="row">
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container mt-4">
+    <div class="row">
+      {% for libro in libros %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <img src="{{ url_for('static', filename=libro.imagen_url) if libro.imagen_url else url_for('static', filename='fondo.png') }}"
+         class="card-img-top"
+               alt="Portada del libro"
+               style="object-fit: cover;">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">{{ libro.titulo }}</h5>
+            <p class="card-text"><strong>Autor:</strong> {{ libro.autor.nombre }}</p>
+            <div class="row mt-auto">
+              <div class="col-6">
+                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalLibro{{ libro.id_libro }}">
+                  Ver más
+                </button>
+              </div>
+              {% if current_user.is_authenticated %}
+              <div class="col-6">
+                <form action="{{ url_for('prestamos.agregar_prestamo', libro_id=libro.id_libro) }}" method="POST">
+                  <button type="submit" class="btn btn-success w-100">Solicitar Préstamo</button>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalLibro{{ libro.id_libro }}" tabindex="-1" aria-labelledby="modalLibroLabel{{ libro.id_libro }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalLibroLabel{{ libro.id_libro }}">{{ libro.titulo }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <img src="{{ url_for('static', filename=libro.imagen_url) if libro.imagen_url else url_for('static', filename='fondo.png') }}" class="img-fluid mb-3" alt="Portada del libro">
+              <p><strong>Autor:</strong> {{ libro.autor.nombre }}</p>
+              <p><strong>Categoría:</strong> {{ libro.categoria.categoria or 'Sin categoría disponible.' }}</p>
+              <p><strong>Stock disponible:</strong> {{ libro.stock }}</p>
+              <p><strong>Descripción:</strong> {{ libro.descripcion or 'Sin descripción disponible.' }}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  {% else %}
+  <p class="text-center">No hay libros disponibles actualmente.</p>
+  {% endfor %}
+</div>
+</div>
+
+<div class="modal fade" id="modalPrestamosActivos" tabindex="-1" aria-labelledby="modalPrestamosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalPrestamosLabel">Tus Préstamos Activos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          {% if prestamos_activos %}
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Libro</th>
+                <th>Fecha de Préstamo</th>
+                <th>Fecha de Entrega</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prestamo in prestamos_activos %}
+              <tr>
+                <td>{{ prestamo.libro.titulo }}</td>
+                <td>{{ prestamo.fecha_salida.strftime('%d/%m/%Y') }}</td>
+                <td>{{ prestamo.fecha_devolucion.strftime('%d/%m/%Y') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+            <p class="text-center">No tienes préstamos activos.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+<footer>
+  <p>&copy; 2025 Biblioteca Digital. Todos los derechos reservados.</p>
+</footer>
+<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+<script>
+  document.getElementById('formBusqueda').addEventListener('submit', function(e) {
+    e.preventDefault(); // Previene el envío tradicional del formulario
+    const form = e.target;
+    const params = new URLSearchParams(new FormData(form)).toString();
+
+    // Realiza la solicitud fetch a tu endpoint de búsqueda
+    fetch(`/libros/busqueda?${params}`)
+    .then(res => {
+        if (!res.ok) { // Verifica si la respuesta HTTP fue exitosa
+            console.error('Error en la respuesta de la búsqueda:', res.statusText);
+            return Promise.reject('Error en la búsqueda'); // Lanza un error para el catch
+        }
+        return res.text(); // Convierte la respuesta a texto (HTML)
+    })
+      .then(html => {
+        // Inserta el HTML de los resultados en el contenedor
+        document.getElementById('resultadosBusqueda').innerHTML = html;
+      })
+      .catch(error => {
+          console.error('Error al realizar la búsqueda:', error);
+          // Puedes mostrar un mensaje de error al usuario aquí
+          document.getElementById('resultadosBusqueda').innerHTML = '<p class="text-danger">Error al cargar los resultados de la búsqueda.</p>';
+      });
+  });
+</script>
+<script>
+    // Desaparecer los mensajes flash después de 5 segundos (5000 ms)
+    setTimeout(function() {
+        var flashMessages = document.querySelectorAll('.alert-container .alert');
+        flashMessages.forEach(function(message) {
+            // Usa Bootstrap's fade out o remueve el elemento
+            // Para una transición más suave, podrías añadir una clase 'fade' y luego 'show' en CSS
+            message.classList.add('d-none'); // Simplemente oculta el elemento
+            // O si prefieres removerlo completamente:
+            // message.remove();
+        });
+    }, 5000);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

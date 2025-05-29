@@ -1,0 +1,37 @@
+{% for usuario in usuarios %}
+  <div class="usuario">
+    <h4>{{ usuario.nombre }}</h4>
+    <p>Préstamos activos: {{ usuario.prestamos_activos }} | Vencidos: {{ usuario.prestamos_vencidos }}</p>
+    
+    <table class="table" style="border-collapse: collapse; border: 10px solid black;">
+      <thead>
+        <tr style="border-collapse: collapse; border: 10px solid black;">
+          <th>Título</th>
+          <th>Fecha devolución</th>
+          <th>Vencido</th>
+          <th>Devuelto</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for libro in usuario.libros_prestados %}
+        <tr>
+          <td>{{ libro.titulo }}</td>
+          <td>
+            <input type="date" form="form-{{ libro.id_prestamo }}" name="fecha_devolucion" value="{{ libro.fecha_devolucion }}">
+          </td>
+          <td>{{ 'Sí' if libro.vencido else 'No' }}</td>
+          <td>
+            <input type="checkbox" form="form-{{ libro.id_prestamo }}" name="devuelto" value="true">
+          </td>
+          <td>
+            <form id="form-{{ libro.id_prestamo }}" method="POST" action="{{ url_for('usuarios.editar_prestamo', id=libro.id_prestamo) }}">
+              <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endfor %}

@@ -1,0 +1,32 @@
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Préstamos activos</th>
+      <th>Préstamos vencidos</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if usuarios %}
+      {% for u in usuarios %}
+        <tr>
+          <td>{{ u.nombre }}</td>
+          <td>{{ u.prestamos_activos }}</td>
+          <td>{{ u.prestamos_vencidos }}</td>
+          <td>
+            <!-- Botón para editar, eliminar, etc. -->
+            <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-sm btn-warning">Editar</a>
+            <form action="{{ url_for('usuarios.eliminar_usuario', id=u.id) }}" method="POST" style="display:inline;">
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar usuario?');">Eliminar</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td colspan="4" class="text-center">No se encontraron usuarios.</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>

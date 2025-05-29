@@ -1,0 +1,32 @@
+{% if usuarios %}
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Préstamos activos</th>
+        <th>Vencidos</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for usuario in usuarios %}
+      <tr>
+        <td>{{ usuario.nombre }}</td>
+        <td>{{ usuario.prestamos_activos }}</td>
+        <td>{{ usuario.prestamos_vencidos }}</td>
+        <td>
+          <button class="btn btn-sm btn-primary" 
+                  hx-get="/usuarios/{{ usuario.id }}/libros_prestados"
+                  hx-target="#detallePrestamos"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalDetallePrestamos">
+            Ver Préstamos
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="alert alert-warning">No se encontraron usuarios.</div>
+{% endif %}

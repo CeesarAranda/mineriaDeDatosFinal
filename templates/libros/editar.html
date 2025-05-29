@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Editar Libro{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Editar Libro</h2>
+
+    <form action="{{ url_for('libros.editar_libro', id=libro.id_libro) }}" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" class="form-control" id="titulo" name="titulo" value="{{ libro.titulo }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="autor_id" class="form-label">Autor</label>
+            <select class="form-select" id="autor_id" name="autor_id" required>
+                {% for autor in autores %}
+                <option value="{{ autor.id_autor }}" {% if autor.id_autor == libro.autor_id %}selected{% endif %}>
+                    {{ autor.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="categoria_id" class="form-label">Categoría</label>
+            <select class="form-select" id="categoria_id" name="categoria_id" required>
+                {% for categoria in categorias %}
+                <option value="{{ categoria.id_categoria }}" {% if categoria.id_categoria == libro.categoria_id %}selected{% endif %}>
+                    {{ categoria.categoria }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="stock" class="form-label">Stock</label>
+            <input type="number" class="form-control" id="stock" name="stock" value="{{ libro.stock }}" min="0" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="imagen" class="form-label">Imagen del libro</label>
+            <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <a href="{{ url_for('libros.lista_libros') }}" class="btn btn-secondary">Cancelar</a>          
+    </form>
+</div>
+{% endblock %}

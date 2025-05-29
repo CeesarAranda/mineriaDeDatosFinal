@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biblioteca Cesarin :v</title>
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+  integrity="sha384-ENjdO4Dr2bkBIFxQpeo5Y9G/n9+8df7cf6BjzrZxGv4hZlYhCebsb8XyFJkUxjXv"
+  crossorigin="anonymous">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"  crossorigin="anonymous"></script>
+
+
+  <!-- Estilos personalizados -->
+  <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}"> -->
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.8.4"></script>
+</head>
+
+<body>
+    <header>
+        <!-- Barra de navegación -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="lista.html">Biblioteca</a>
+                <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-auto">
+                      
+                        
+                        {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link disabled text-primary" href="#" style="font-size: 1.2rem; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                Hola, {{ current_user.nombre }}
+                            </a>
+                        </li>
+                        
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    
+                </div>
+            </div>
+        </nav>
+    </header>
+    <!-- #NOTOFICACIONES -->
+    <div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mt-3">
+                {% for category, message in messages %}
+                    <div id="flash-message" class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    </div>
+
+    <main class="container mt-4">
+        <!-- Aquí se inyecta el contenido específico de cada vista -->
+        {% block content %}{% endblock %}
+    </main>
+
+
+
+   
+
+
+
+
+    <footer class="bg-dark text-white text-center py-3 fixed-bottom">
+        <p>&copy; 2025 Biblioteca. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-pzjw8f+ua7Kw1TIq0pi3fJSJXbsg3d4v8lCwG0qOkZqfuV7gpr/zFQGHk/2F5S9X"
+        crossorigin="anonymous"></script>
+        <script>
+          // Desaparecer los mensajes después de 5 segundos (5000 ms)
+          setTimeout(function() {
+              var flashMessages = document.querySelectorAll('#flash-message');
+              flashMessages.forEach(function(message) {
+                  message.classList.remove('show');  // Remueve la clase 'show' para ocultarlo
+              });
+          }, 5000);  // 5000 ms = 5 segundos
+      </script>
+      <script>
+        // Obtener el modal y los botones de editar
+        var editarModal = new bootstrap.Modal(document.getElementById('editarModal'));
+        var editarButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#editarModal"]');
+    
+        // Asignar los valores al modal cuando se hace clic en un botón de editar
+        editarButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                var id = this.getAttribute('data-id');
+                var nombre = this.getAttribute('data-nombre');
+                var correo = this.getAttribute('data-correo');
+                var contraseña = this.getAttribute('data-contraseña');
+                var es_admin = this.getAttribute('data-es_admin');
+    
+                // Asignar los valores al formulario del modal
+                document.getElementById('nombre').value = nombre;
+                document.getElementById('correo').value = correo;
+                document.getElementById('contraseña').value = contraseña;
+                document.getElementById('es_admin').checked = (es_admin === 'True');  // Si es administrador, marcar el checkbox
+    
+                // Cambiar la acción del formulario a la URL correcta para editar
+                var form = document.getElementById('editarForm');
+                form.action = '/usuarios/editar_usuario/' + id; // Asegúrate de que esta ruta es la correcta
+            });
+        });
+    </script>
+    <!-- Body (antes de </body>) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</body>
+
+</html>
